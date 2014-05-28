@@ -1,0 +1,93 @@
+## **Analysis of different storm types to find it's effect on Health and Economy.**
+
+ **Synopsis**
+
+This document explains the consequences of different storm types on the human health and US economy.
+Here we have explored the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+In this document we present an analysis of the last 60 years storms that occured in the United States. We highlight storm types that have the highest human and economic consequences.
+
+
+ **Data Processing**
+
+```{r}
+
+
+## Here we are reading the .csv provided from the Assignment link.
+
+## First download the .bz2 file from the link.
+
+## unzip data
+library(R.utils)
+fileData <- "repdata_data_StormData.csv"
+bunzip2(filename = "repdata_data_StormData.csv.bz2", destname = fileData, overwrite = TRUE)
+
+# read data
+data <- read.csv(fileData, header = TRUE, sep = ",")
+
+
+```
+
+We have separated the different storms into two groups one which has caused casualties in the past and the ones which have not caused any harm until now.
+
+
+```{r}
+
+EvntCasualties <- aggregate(cbind(data$INJURIES, data$FATALITIES) ~ data$EVTYPE, data, sum) 
+
+## Events consists of storms type which has resulted in Injuries/Fatalities.
+
+NoCasualties <- EvntCasualties[,2] == 0 & EvntCasualties[,3] == 0
+Events <- EvntCasualties[!NoCasualties,]
+names(Events) <- cbind("type", "injuries", "fatalities")
+
+
+```
+
+
+**Results**
+
+1.Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful        with respect to population health?
+
+
+2. Across the United States, which types of events have the greatest economic consequences?
+
+
+
+```{r}
+library(ggplot2)
+library(reshape2)
+
+Storm_Injuries <- order(Events[, 2], decreasing = T)
+Storm_Fatalities <- order(Events[, 3], decreasing = T)
+
+# extracting the top 10 storms.
+
+storm_plot <- melt(Events[Storm_Fatalities, ][1:10, ], "type")
+
+## Plot showing the effect of different storms on human life.
+
+ggplot(storm_plot, aes(x = type, y = value, fill = variable)) + geom_bar(position = "dodge",stat="identity") + 
+    theme(axis.text.x = element_text(angle = 60, hjust = 1)) + labs(title = "Top 10 fatal storm types", 
+    x = "Storm type", y = " TotalNo.ofpeople injured and killed")
+
+## Below list shows the storms which have proved to be destructive for US Economy.
+
+events <- sort(unique(data$EVTYPE[data$PROPDMGEXP == "B" | data$CROPDMGEXP == "B"]))
+print(events)
+
+```
+
+**Please get the below details in case of reproducing it.**
+
+The complete detail can be found here : https://github.com/Dipak22/ReproducibleReserach_PeerAssessment2
+
+The data was provided here : https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Fcsv.csv.bz2
+
+The analysis was performed with the below system configuration
+
+```{r}
+
+sessionInfo()
+
+```
+
